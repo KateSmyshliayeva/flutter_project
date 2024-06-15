@@ -72,4 +72,32 @@ jobs:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
           profile: Nexus 6
-          script: flutter test integration_test --verbose
+          script: flutter test integration_test
+
+  drive_android:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        api-level: [29]
+        target: [playstore]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
+          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:' 
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      # Run integration test
+      - name: Run integration tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          target: ${{ matrix.target }}
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          profile: Nexus 6
+          script: flutter test integration_test
