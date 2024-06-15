@@ -101,3 +101,86 @@ jobs:
           arch: x86_64
           profile: Nexus 6
           script: flutter test integration_test
+
+  flutter_job:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        api-level: [31]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 11
+      
+      - name: Setup Flutter 3.19.6
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
+          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:' 
+      
+      - name: Gradle cache
+        uses: gradle/gradle-build-action@v2
+      
+      - name: Install Maestro
+        run: curl -Ls "https://raw.githubusercontent.com/GuillermoDLCO/maestro/main/scripts/install.sh" | bash
+
+      - name: AVD cache
+        uses: actions/cache@v3
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ matrix.api-level }}
+
+      - name: Run setup script
+        run: ./setup_flutter_as_app.sh
+
+      - name: Create AVD and generate snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: android-tv
+          profile: tv_1080p
+          arch: x86
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          avd-name: macos-ci-avd
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Run Flutter tests
+        run: flutter test
+
+      - name: Run integration tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: android-tv
+          arch: x86
+          profile: tv_1080p
+          force-avd-creation: false
+          avd-name: macos-ci-avd
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            adb shell pm list packages | grep 'com.android.app.example' && adb uninstall com.android.app.example || echo "Application not found"
+            flutter build apk --debug --target-platform=android-x86
+            flutter install --debug
+            export MAESTRO_DRIVER_STARTUP_TIMEOUT=60000
+            ~/.maestro/bin/maestro test ./integration_test/run-test.yml
+      - name : Upload results
+        if : ${{ always() }}
+        uses : actions/upload-artifact@v3
+        with :
+          name : integration_testing_results-flutter-${{ matrix.api-level }}
+          path : ~/.maestro/tests/**
