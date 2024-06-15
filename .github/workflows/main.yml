@@ -46,7 +46,7 @@ jobs:
       - run: flutter test integration_test
 
   android:
-    runs-on: macOS-latest
+    runs-on: macos-latest
     strategy:
       matrix:
         api-level:
@@ -54,15 +54,13 @@ jobs:
           # you can add more API level if you want to run your tests on different API
       fail-fast: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.6'
-          channel: 'stable'
-          cache: true
-          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
-          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:' 
+          channel: stable
+          # instead of "channel: stable", you could be more precise by specifying the exact version of Flutter you're using:
+          # flutter-version: '<FLUTTER_VERSION>'
       - name: Install Flutter dependencies
         run: flutter pub get
       - name: Run integration tests
@@ -72,69 +70,31 @@ jobs:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
           profile: Nexus 6
-          script: flutter test integration_test
+          script: flutter test integration_test --verbose
 
-  drive_android:
-    runs-on: macos-latest
+  android_test:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        api-level: [29]
-        target: [playstore]
+        api-level:
+          - 29
+          # you can add more API level if you want to run your tests on different API
+      fail-fast: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@v3
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.6'
-          channel: 'stable'
-          cache: true
-          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
-          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:' 
+          channel: stable
+          # instead of "channel: stable", you could be more precise by specifying the exact version of Flutter you're using:
+          # flutter-version: '<FLUTTER_VERSION>'
       - name: Install Flutter dependencies
         run: flutter pub get
-
-      # Run integration test
       - name: Run integration tests
+        # more info on https://github.com/ReactiveCircus/android-emulator-runner
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          target: ${{ matrix.target }}
           api-level: ${{ matrix.api-level }}
           arch: x86_64
           profile: Nexus 6
-          script: flutter test integration_test
-
-  integration-tests:
-    name: Running tests on macOS-latest
-    runs-on: macOS-latest
-    strategy:
-      matrix:
-        api-level: [29]
-      fail-fast: false
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Setup Java
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'zulu'
-          java-version: '11'
-      - name: Setup Flutter (stable)
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.6'
-          channel: 'stable'
-          cache: true
-          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
-          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:' 
-      - name: Install Android SDK
-        uses: malinskiy/action-android/install-sdk@release/0.1.2
-      - run: echo $ANDROID_HOME
-      - run: sdkmanager --install "ndk;23.1.7779620"
-      - run: sdkmanager --install "build-tools;30.0.3"
-      - run: flutter pub get
-      - uses: malinskiy/action-android/emulator-run-cmd@release/0.1.2
-        with:
-          cmd: flutter test integration_test
-          api: 31
-          cmdOptions: -no-snapshot-save -noaudio -no-boot-anim -cores 2 -memory 3072 -no-window
-          tag: google_apis
-          abi: x86_64
+          script: flutter test integration_test --verbose
