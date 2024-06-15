@@ -1,0 +1,57 @@
+name: main
+
+on: [push, workflow_dispatch]
+
+jobs:
+
+  ios:
+    strategy:
+      matrix:
+        device:
+          - "iPhone 15 Pro Simulator (17.4)"
+      fail-fast: true
+    runs-on: macos-11
+    steps:
+      - name: "List all simulators"
+        run: "xcrun xctrace list devices"
+      - name: "Start Simulator"
+
+        run: |
+          UDID=$(xcrun xctrace list devices | grep "^${{ matrix.device }}" | awk '{gsub(/[()]/,""); print $NF}')
+          echo $UDID
+          xcrun simctl boot "${UDID:?No Simulator with this name found}"
+      - uses: actions/checkout@v3
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install Flutter dependencies
+        run: flutter pub get
+      - name: Run integration tests
+        run: flutter test integration_test --verbose
+
+  android:
+    runs-on: macos-11
+    strategy:
+      matrix:
+        api-level:
+          - 29
+          - 30
+          - 30
+          - 31
+      fail-fast: true
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install Flutter dependencies
+        run: flutter pub get
+      - name: Run integration tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          profile: Nexus 6
+          script: flutter test integration_test --verbose
