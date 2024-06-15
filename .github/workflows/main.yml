@@ -10,7 +10,7 @@ jobs:
         device:
           - "iPhone 15 Pro Simulator (17.4)"
       fail-fast: true
-    runs-on: macos-11
+    runs-on: macos-14.4.1
     steps:
       - name: "List all simulators"
         run: "xcrun xctrace list devices"
@@ -31,7 +31,7 @@ jobs:
         run: flutter test integration_test --verbose
 
   android:
-    runs-on: macos-11
+    runs-on: macos-14.4.1
     strategy:
       matrix:
         api-level:
