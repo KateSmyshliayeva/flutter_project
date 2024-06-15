@@ -24,30 +24,19 @@ jobs:
       - name: Run tests
         run: flutter test --coverage
 
-  android:
+  test:
     runs-on: macOS-latest
-    strategy:
-      matrix:
-        api-level:
-          - 32
-      fail-fast: true
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup Flutter SDK
-        uses: subosito/flutter-action@v2
+      - uses: actions/checkout@v4
+
+      - uses: futureware-tech/simulator-action@v3
         with:
-          channel: stable
-      - name: Install Flutter dependencies
-        run: flutter pub get
-      - name: Run integration tests
-        uses: reactivecircus/android-emulator-runner@v2.27.0
+          model: 'iPhone 14'
+
+      - uses: subosito/flutter-action@v2
         with:
-          api-level: ${{ matrix.api-level }}
-          profile: Nexus 5
-          target: playstore
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          script: flutter test integration_test --verbose
-          
+          channel: 'stable'
+
+      - run: flutter pub get
+      - run: flutter test integration_test
