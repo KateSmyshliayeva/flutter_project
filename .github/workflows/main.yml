@@ -24,35 +24,26 @@ jobs:
       - name: Run tests
         run: flutter test --coverage
 
-  integration-tests:
+  android:
     runs-on: macOS-latest
     strategy:
       matrix:
         api-level:
-          - 29
-      fail-fast: false
+          - 32
+      fail-fast: true
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Setup Java
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'zulu'
-          java-version: '11'
-      - name: Setup Flutter (stable)
+      - uses: actions/checkout@v3
+      - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
-      - name: Install Android SDK
-        uses: malinskiy/action-android/install-sdk@release/0.1.2
-      - run: echo $ANDROID_HOME
-      - run: sdkmanager --install "ndk;23.1.7779620"
-      - run: sdkmanager --install "build-tools;30.0.3"
-      - run: flutter pub get
-      - uses: malinskiy/action-android/emulator-run-cmd@release/0.1.2
+          channel: stable
+      - name: Install Flutter dependencies
+        run: flutter pub get
+      - name: Run integration tests
+        uses: reactivecircus/android-emulator-runner@v2
         with:
-          cmd: flutter test integration_test
-          api: 31
-          cmdOptions: -no-snapshot-save -noaudio -no-boot-anim -cores 2 -memory 3072 -no-window
-          tag: google_apis
-          abi: x86_64
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          profile: Nexus 6
+          script: flutter test integration_test --verbose
+
