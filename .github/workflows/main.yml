@@ -46,7 +46,7 @@ jobs:
   #     - run: flutter test integration_test
 
   android:
-    runs-on: ubuntu-latest
+    runs-on: macos-11
     strategy:
       matrix:
         api-level:
@@ -56,13 +56,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup Flutter SDK
-      - uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.6'
-          channel: 'stable'
-          cache: true
-          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
-          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:'
+          channel: stable
+          # instead of "channel: stable", you could be more precise by specifying the exact version of Flutter you're using:
+          # flutter-version: '<FLUTTER_VERSION>'
       - name: Install Flutter dependencies
         run: flutter pub get
       - name: Run integration tests
