@@ -45,31 +45,25 @@ jobs:
   #     - run: flutter pub get
   #     - run: flutter test integration_test
 
-
-  android_test:
-    runs-on: ubuntu-latest
+  drive_android:
+    runs-on: macos-latest
     strategy:
       matrix:
-        api-level:
-          - 29
-          # you can add more API level if you want to run your tests on different API
-      fail-fast: true
+        api-level: [29]
+        target: [playstore]
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup Flutter SDK
-        uses: subosito/flutter-action@v2
+      - uses: actions/checkout@v2
+      - uses: subosito/flutter-action@v1
         with:
-          channel: stable
-          # instead of "channel: stable", you could be more precise by specifying the exact version of Flutter you're using:
-          # flutter-version: '<FLUTTER_VERSION>'
-      - name: Install Flutter dependencies
-        run: flutter pub get
-      - name: Run integration tests
-        # more info on https://github.com/ReactiveCircus/android-emulator-runner
+          flutter-version: '2.8.1'
+          channel: 'stable'
+
+      # Run integration test
+      - name: Run Flutter Driver tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
+          target: ${{ matrix.target }}
           api-level: ${{ matrix.api-level }}
           arch: x86_64
           profile: Nexus 6
-      - run: flutter pub get
-      - run: flutter test integration_test
+          script: flutter test integration_test
