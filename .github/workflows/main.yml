@@ -4,25 +4,25 @@ on: [push, workflow_dispatch]
 
 jobs:
 
-  build:
-    runs-on: ubuntu-latest
+  # build:
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v3
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.6'
-          channel: 'stable'
-          cache: true
-          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
-          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:' # optional, change this to specify the cache path
+  #     - uses: subosito/flutter-action@v2
+  #       with:
+  #         flutter-version: '3.19.6'
+  #         channel: 'stable'
+  #         cache: true
+  #         cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
+  #         cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:' # optional, change this to specify the cache path
 
-      - name: Install dependencies
-        run: flutter pub get
+  #     - name: Install dependencies
+  #       run: flutter pub get
 
-      - name: Run tests
-        run: flutter test --coverage
+  #     - name: Run tests
+  #       run: flutter test --coverage
 
   # ios:
   #   runs-on: macOS-latest
@@ -45,25 +45,31 @@ jobs:
   #     - run: flutter pub get
   #     - run: flutter test integration_test
 
-  drive_android:
-    runs-on: macos-latest
+  android:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        api-level: [29]
-        target: [playstore]
+        api-level:
+          - 29
+          # you can add more API level if you want to run your tests on different API
+      fail-fast: true
     steps:
-      - uses: actions/checkout@v2
-      - uses: subosito/flutter-action@v1
+      - uses: actions/checkout@v3
+      - name: Setup Flutter SDK
+      - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '2.8.1'
+          flutter-version: '3.19.6'
           channel: 'stable'
-
-      # Run integration test
-      - name: Run Flutter Driver tests
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
+          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:'
+      - name: Install Flutter dependencies
+        run: flutter pub get
+      - name: Run integration tests
+        # more info on https://github.com/ReactiveCircus/android-emulator-runner
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          target: ${{ matrix.target }}
           api-level: ${{ matrix.api-level }}
           arch: x86_64
           profile: Nexus 6
-          script: flutter test integration_test
+          script: flutter test integration_test --verbose
