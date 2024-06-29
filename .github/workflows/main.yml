@@ -12,7 +12,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        api-level: [21, 23, 29]
     steps:
       - uses: actions/checkout@v3
 
@@ -41,7 +43,8 @@ jobs:
         id: avd-cache
         with:
           path: |
-            ~/.android/*
+            ~/.android/avd/*
+            ~/.android/adb*
           key: avd-${{ matrix.api-level }}
 
       - name: create AVD and generate snapshot for caching
