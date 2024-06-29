@@ -39,7 +39,7 @@ jobs:
       - name: run android integration_test
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 31
+          api-level: 30
           script: flutter test integration_test --coverage
 
       - name: Run tests
