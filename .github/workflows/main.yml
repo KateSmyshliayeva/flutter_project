@@ -33,7 +33,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: run integration_test android
+      - name: android integration_test
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
@@ -42,7 +42,7 @@ jobs:
       - name: Run tests
         run: flutter test --coverage
         
-  test:
+  ios:
     runs-on: macOS-latest
     steps:
       - uses: actions/checkout@v3
@@ -58,6 +58,9 @@ jobs:
       - uses: futureware-tech/simulator-action@v3
         with:
           model: 'iPhone 14'
+          
+      - name: Install dependencies
+        run: flutter pub get
 
-      - run: flutter pub get
+      - name: ios integration_test
       - run: flutter test integration_test --coverage
