@@ -6,6 +6,24 @@ on:
       - '**'
 name: Flutter integration test
 jobs:
+  ios:
+    runs-on: macOS-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
+          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:' # optional, change this to specify the cache path
+      
+      - uses: futureware-tech/simulator-action@v3
+        with:
+          model: 'iPhone 14'
+      - run: flutter pub get
+      - run: flutter test integration_test
+      
   test:
     runs-on: ubuntu-latest
     steps:
@@ -33,6 +51,6 @@ jobs:
       - name: run tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
+          api-level: 34
           script: flutter test integration_test
           
