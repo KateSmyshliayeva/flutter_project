@@ -1,37 +1,24 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Test Application
+
 on:
   push:
-    tags-ignore:
-      - '**'
-    branches:
-      - '**'
-name: Flutter integration test
+    branches: [ "main" ]
+
 jobs:
-  ios:
-    runs-on: macOS-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.6'
-          channel: 'stable'
-          cache: true
-          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
-          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:' # optional, change this to specify the cache path
-      
-      - uses: futureware-tech/simulator-action@v3
-        with:
-          model: 'iPhone 14'
-      - run: flutter pub get
-      - run: flutter test integration_test
-      
-  test:
+  build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.6'
+          flutter-version: '3.16.9'
           channel: 'stable'
           cache: true
           cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' # optional, change this to force refresh cache
@@ -39,6 +26,10 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Install intl dependencies
+        run: dart run intl_utils:generate
+
       - name: checkout
         uses: actions/checkout@v4
 
@@ -48,9 +39,11 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: run tests
+      - name: run android integration_test
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
-          script: flutter test integration_test
-          
+          api-level: 29
+          script: flutter test integration_test --coverage
+
+      - name: Run tests
+        run: flutter test --coverage
