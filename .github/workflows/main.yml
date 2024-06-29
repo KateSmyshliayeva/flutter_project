@@ -45,7 +45,7 @@ jobs:
   test:
     runs-on: macOS-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - uses: subosito/flutter-action@v2
         with:
@@ -60,4 +60,4 @@ jobs:
           model: 'iPhone 14'
 
       - run: flutter pub get
-      - run: flutter test integration_test
+      - run: flutter test integration_test --coverage
