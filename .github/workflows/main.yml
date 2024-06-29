@@ -27,9 +27,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Install intl dependencies
-        run: dart run intl_utils:generate
-
       - name: checkout
         uses: actions/checkout@v4
 
